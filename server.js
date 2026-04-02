@@ -6,7 +6,6 @@ const fs = require("fs");
 
 const app = express();
 
-// 確保 uploads 目錄存在
 if (!fs.existsSync("uploads")) fs.mkdirSync("uploads");
 
 const upload = multer({
@@ -18,11 +17,9 @@ const upload = multer({
   }
 });
 
-// 靜態檔案
 app.use(express.static(path.join(__dirname)));
 app.use("/uploads", express.static("uploads"));
 
-// 圖片上傳端點
 app.post("/upload", upload.single("image"), (req, res) => {
   if (!req.file) return res.status(400).json({ error: "無效的檔案" });
   res.json({ url: `/uploads/${req.file.filename}` });
@@ -34,55 +31,29 @@ const httpServer = app.listen(3000, () => {
 
 const wss = new WebSocket.Server({ server: httpServer });
 
-/**
- * 偵測語言
- * - 含韓文字元 → ko
- * - 否則視為繁體中文 → zh
- */
 function detectLang(text) {
-  return /[ㄱ-ㅎㅏ-ㅣ가-힣]/.test(text) ? "ko" : "zh";
+  return /[ㄱ-ㅎㅏ-ㅣ가-힣]/.test(text) ? "ko" : "zh-TW";
 }
 
 /**
- * 使用 LibreTranslate 翻譯（免費，不需要金鑰）
+ * 使用 MyMemory API 翻譯（完全免費，不需要金鑰）
+ * 每天免費 5000 字
  */
 async function translate(text, sourceLang, targetLang) {
-  // 嘗試多個公開的 LibreTranslate 伺服器，避免單點故障
-  const servers = [
-    "https://libretranslate.com/translate",
-    "https://translate.argosopentech.com/translate",
-    "https://translate.terraprint.co/translate"
-  ];
+  const langPair = `${sourceLang}|${targetLang}`;
+  const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${langPair}`;
 
-  for (const url of servers) {
-    try {
-      const res = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          q: text,
-          source: sourceLang,
-          target: targetLang,
-          format: "text"
-        }),
-        signal: AbortSignal.timeout(8000) // 8 秒逾時
-      });
+  const res = await fetch(url, {
+    signal: AbortSignal.timeout(8000)
+  });
 
-      if (!res.ok) continue;
-      const data = await res.json();
-      if (data.translatedText) return data.translatedText;
-    } catch {
-      // 這台失敗，試下一台
-      continue;
-    }
-  }
+  if (!res.ok) throw new Error("翻譯請求失敗");
+  const data = await res.json();
 
-  throw new Error("所有翻譯伺服器都無法連線");
+  if (data.responseStatus !== 200) throw new Error("翻譯失敗");
+  return data.responseData.translatedText;
 }
 
-/**
- * 廣播訊息給所有連線的客戶端
- */
 function broadcast(data) {
   const payload = JSON.stringify(data);
   wss.clients.forEach(client => {
@@ -101,7 +72,7 @@ wss.on("connection", (ws) => {
 
       if (data.type === "text") {
         const sourceLang = detectLang(data.text);
-        const targetLang = sourceLang === "ko" ? "zh" : "ko";
+        const targetLang = sourceLang === "ko" ? "zh-TW" : "ko";
         const translated = await translate(data.text, sourceLang, targetLang);
         broadcast({
           type: "text",
