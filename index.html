@@ -346,6 +346,13 @@
     socket.onmessage = (event) => {
       const msg = JSON.parse(event.data);
       if (msg.type === "error") { appendError(msg.message); return; }
+      if (msg.type === "history") {
+        msg.messages.forEach(m => {
+          if (m.type === "text") renderMessage({ type: "text", original: m.original, translated: m.translated, lang: m.lang });
+          if (m.type === "image") renderMessage({ type: "image", imageUrl: m.image_url });
+        });
+        return;
+      }
       renderMessage(msg);
     };
   }
