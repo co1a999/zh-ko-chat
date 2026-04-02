@@ -277,6 +277,7 @@
       </div>
       <span class="title-text">即時翻譯聊天</span>
     </div>
+    <button id="rate-toggle-btn" onclick="toggleSpeechRate()" style="background:none;border:1px solid var(--border);border-radius:8px;padding:4px 10px;font-size:12px;color:var(--text-muted);cursor:pointer;">🐇 正常</button>
     <div id="status">
       <div class="status-dot"></div>
       <span class="status-label">連線中...</span>
@@ -508,11 +509,26 @@
     }, 300);
   });
 
-  // 朗讀文字
+  // 語速狀態（預設正常）
+  let currentSpeechRate = 1.0;
+
+  function toggleSpeechRate() {
+    const rateBtn = document.getElementById('rate-toggle-btn');
+    if (currentSpeechRate === 1.0) {
+      currentSpeechRate = 0.75;
+      rateBtn.textContent = '🐢 慢速';
+    } else {
+      currentSpeechRate = 1.0;
+      rateBtn.textContent = '🐇 正常';
+    }
+  }
+
   function playText(text, lang) {
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = lang;
+    utterance.rate = currentSpeechRate;
+    utterance.pitch = currentSpeechRate < 1.0 ? 1.1 : 1.0;
     window.speechSynthesis.speak(utterance);
   }
 </script>
