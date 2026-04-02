@@ -410,12 +410,12 @@
       speakRow.style.cssText = 'display:flex;gap:8px;margin-top:8px;';
 
       const btnOrig = document.createElement('button');
-      btnOrig.textContent = '🔊 原文';
+      btnOrig.textContent = '🔊 🇹🇼';
       btnOrig.style.cssText = 'background:none;border:1px solid var(--border);border-radius:6px;padding:2px 8px;font-size:11px;color:var(--text-muted);cursor:pointer;';
       btnOrig.onclick = () => playText(msg.original, msg.lang === "ko" ? "ko-KR" : "zh-TW");
 
       const btnTrans = document.createElement('button');
-      btnTrans.textContent = '🔊 譯文';
+      btnTrans.textContent = '🔊 🇰🇷';
       btnTrans.style.cssText = 'background:none;border:1px solid var(--border);border-radius:6px;padding:2px 8px;font-size:11px;color:var(--text-muted);cursor:pointer;';
       btnTrans.onclick = () => playText(msg.translated, msg.lang === "ko" ? "zh-TW" : "ko-KR");
 
