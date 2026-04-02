@@ -405,9 +405,27 @@
       translated.className = "msg-translated";
       translated.textContent = msg.translated;
 
+      // 朗讀按鈕
+      const speakRow = document.createElement('div');
+      speakRow.style.cssText = 'display:flex;gap:8px;margin-top:8px;';
+
+      const btnOrig = document.createElement('button');
+      btnOrig.textContent = '🔊 原文';
+      btnOrig.style.cssText = 'background:none;border:1px solid var(--border);border-radius:6px;padding:2px 8px;font-size:11px;color:var(--text-muted);cursor:pointer;';
+      btnOrig.onclick = () => playText(msg.original, msg.lang === "ko" ? "ko-KR" : "zh-TW");
+
+      const btnTrans = document.createElement('button');
+      btnTrans.textContent = '🔊 譯文';
+      btnTrans.style.cssText = 'background:none;border:1px solid var(--border);border-radius:6px;padding:2px 8px;font-size:11px;color:var(--text-muted);cursor:pointer;';
+      btnTrans.onclick = () => playText(msg.translated, msg.lang === "ko" ? "zh-TW" : "ko-KR");
+
+      speakRow.appendChild(btnOrig);
+      speakRow.appendChild(btnTrans);
+
       bubble.appendChild(original);
       bubble.appendChild(divider);
       bubble.appendChild(translated);
+      bubble.appendChild(speakRow);
       div.appendChild(tag);
       div.appendChild(bubble);
     }
@@ -472,6 +490,24 @@
   });
 
   connect();
+
+  // 手機鍵盤彈出時自動調整版面
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', () => {
+      const viewHeight = window.visualViewport.height;
+      document.body.style.height = viewHeight + 'px';
+      const chat = document.getElementById('chat');
+      chat.scrollTop = chat.scrollHeight;
+    });
+  }
+
+  // 朗讀文字
+  function playText(text, lang) {
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = lang;
+    window.speechSynthesis.speak(utterance);
+  }
 </script>
 </body>
 </html>
