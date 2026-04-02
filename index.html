@@ -26,7 +26,7 @@
       background: var(--bg);
       color: var(--text);
       font-family: 'Noto Sans TC', 'Noto Sans KR', sans-serif;
-      height: 100vh;
+      min-height: 100svh;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -36,7 +36,7 @@
     .container {
       width: 100%;
       max-width: 560px;
-      height: 100vh;
+      min-height: 100svh;
       max-height: 780px;
       display: flex;
       flex-direction: column;
@@ -494,12 +494,19 @@
   // 手機鍵盤彈出時自動調整版面
   if (window.visualViewport) {
     window.visualViewport.addEventListener('resize', () => {
-      const viewHeight = window.visualViewport.height;
-      document.body.style.height = viewHeight + 'px';
+      document.body.style.height = window.visualViewport.height + 'px';
       const chat = document.getElementById('chat');
       chat.scrollTop = chat.scrollHeight;
     });
   }
+
+  // 輸入框 focus 時自動捲動到可視區域
+  const inputElement = document.getElementById('text');
+  inputElement.addEventListener('focus', () => {
+    setTimeout(() => {
+      inputElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 300);
+  });
 
   // 朗讀文字
   function playText(text, lang) {
